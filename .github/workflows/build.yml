@@ -1,4 +1,4 @@
-name: Build Seshat
+name: Build Seshat Windows
 
 on:
   push:
@@ -10,31 +10,28 @@ on:
 jobs:
   build-windows:
     runs-on: windows-latest
-    steps:
-      - uses: actions/checkout@v4
-      - name: Setup MinGW
-        uses: egor-tensin/setup-mingw@v2
-        with:
-          platform: x64
-      - name: Build
-        run: make
-        shell: bash
-      - name: Upload artifacts
-        uses: actions/upload-artifact@v4
-        with:
-          name: seshat-windows
-          path: "*.exe"
 
-  build-linux:
-    runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
-      - name: Install dependencies
-        run: sudo apt-get update && sudo apt-get install -y build-essential
-      - name: Build
-        run: make
-      - name: Upload artifacts
-        uses: actions/upload-artifact@v4
-        with:
-          name: seshat-linux
-          path: seshat
+    - uses: actions/checkout@v4
+
+    - name: Setup MinGW
+      uses: egor-tensin/setup-mingw@v2
+      with:
+        platform: x64
+
+    - name: Build
+      run: make
+      shell: bash
+
+    - name: Cleanup old pthread (ignore missing)
+      run: |
+        $mingw_lib = 'C:\ProgramData\chocolatey\lib\mingw\tools\install\mingw64\lib'
+        Remove-Item (Join-Path $mingw_lib 'libpthread.dll.a') -ErrorAction SilentlyContinue
+        Remove-Item (Join-Path $mingw_lib 'libwinpthread.dll.a') -ErrorAction SilentlyContinue
+      shell: powershell
+
+    - name: Upload artifacts
+      uses: actions/upload-artifact@v4
+      with:
+        name: seshat-windows
+        path: "*.exe"
